@@ -1,0 +1,92 @@
+version: '3.8'
+
+networks:
+  votaya-net:
+    driver: bridge
+
+services:
+  # --- Backend Microservices ---
+
+  auth-service:
+    build: ./VotaYa-Backend/AuthService
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    networks:
+      - votaya-net
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  voting-service:
+    build: ./VotaYa-Backend/VotingService
+    container_name: voting-service
+    ports:
+      - "8082:8082"
+    networks:
+      - votaya-net
+    depends_on:
+      - votaya-broker
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - RABBITMQ_HOST=votaya-broker
+
+  ledger-service:
+    build: ./VotaYa-Backend/LedgerService
+    container_name: ledger-service
+    ports:
+      - "8083:8083"
+    networks:
+      - votaya-net
+    depends_on:
+      - votaya-broker
+    volumes:
+      - sqlite-data:/database
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - RABBITMQ_HOST=votaya-broker
+
+  report-service:
+    build: ./VotaYa-Backend/ReportService
+    container_name: report-service
+    ports:
+      - "8084:8084"
+    networks:
+      - votaya-net
+    volumes:
+      - sqlite-data:/database
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  # --- Frontend Service ---
+
+  frontend:
+    build: ./VotaYa Digital Voting Platform
+    container_name: frontend
+    ports:
+      - "80:80"
+    networks:
+      - votaya-net
+    depends_on:
+      - auth-service
+      - voting-service
+      - report-service
+
+  # --- Infrastructure Services ---
+
+  votaya-broker:
+    image: rabbitmq:3.13-management-alpine
+    container_name: votaya-broker
+    ports:
+      - "5672:5672"  # AMQP port
+      - "15672:15672" # Management UI port
+    networks:
+      - votaya-net
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  sqlite-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+
