@@ -1,5 +1,5 @@
 # Etapa 1: Compilación de la aplicación con Maven
-FROM maven:3.8.5-openjdk-17-slim AS build
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
 # Copiar el pom.xml para descargar dependencias
