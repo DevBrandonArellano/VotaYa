@@ -37,8 +37,9 @@
         </dependency>
         <!-- Need a specific dialect for SQLite with modern Hibernate -->
         <dependency> 
-            <groupId>org.hibernate.community</groupId>
+            <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-community-dialects</artifactId>
+            <version>6.3.1.Final</version>
         </dependency>
 
         <dependency>
