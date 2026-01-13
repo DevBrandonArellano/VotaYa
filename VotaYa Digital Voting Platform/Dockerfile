@@ -18,7 +18,7 @@ WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 
 # Copiar los archivos de build desde la etapa anterior
-COPY --from=build /app/dist .
+COPY --from=build /app/build .
 
 # Copiar la configuración de Nginx para SPAs
 COPY nginx.conf /etc/nginx/conf.d/default.conf
