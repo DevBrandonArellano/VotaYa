@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Download, Mail, Check, FileText, User, Calendar, Hash, ShieldCheck } from 'lucide-react';
+import { Shield, Download, Mail, Check, FileText, User, Calendar, Hash, ShieldCheck, Loader2 } from 'lucide-react'; // Import Loader2
 import { Button } from './components/Button';
 import { Input } from './components/Input';
 import { Card } from './components/Card';
@@ -18,6 +18,9 @@ export default function App() {
   const [cedula, setCedula] = useState('');
   const [cedulaError, setCedulaError] = useState('');
   const [votes, setVotes] = useState<VoteData>({});
+  const [voterFirstName, setVoterFirstName] = useState<string | null>(null); // New state for first name
+  const [voterLastName, setVoterLastName] = useState<string | null>(null);   // New state for last name
+  const [loading, setLoading] = useState<boolean>(false);                   // New state for loading indicator
 
   // Datos de ejemplo para las preguntas
   const questions = [
@@ -50,14 +53,41 @@ export default function App() {
     }
   ];
 
-  const handleLogin = () => {
-    // Validación simple
-    if (!cedula || cedula.length < 10) {
+  const handleLogin = async () => {
+    // Basic client-side validation
+    if (!cedula || cedula.length !== 10) {
       setCedulaError('Por favor ingrese un número de cédula válido (10 dígitos)');
+      setVoterFirstName(null);
+      setVoterLastName(null);
       return;
     }
+
     setCedulaError('');
-    setCurrentScreen('voting');
+    setLoading(true); // Start loading
+
+    try {
+      // Call your backend API to validate the cedula
+      const response = await fetch(`/api/auth/validate-cedula?cedula=${cedula}`);
+      const data = await response.json();
+
+      if (response.ok && data.firstName && data.lastName) {
+        setVoterFirstName(data.firstName);
+        setVoterLastName(data.lastName);
+        // If validation is successful, you can now proceed to the voting screen
+        setCurrentScreen('voting');
+      } else {
+        setCedulaError(data.message || 'Error al validar cédula. Intente de nuevo.');
+        setVoterFirstName(null);
+        setVoterLastName(null);
+      }
+    } catch (error) {
+      console.error('Error fetching cedula validation:', error);
+      setCedulaError('Error de conexión con el servicio de validación.');
+      setVoterFirstName(null);
+      setVoterLastName(null);
+    } finally {
+      setLoading(false); // End loading
+    }
   };
 
   const handleVote = (questionId: string, optionId: string) => {
@@ -111,13 +141,27 @@ export default function App() {
               required
             />
 
+            {loading && (
+              <div className="flex items-center justify-center text-blue-500">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Validando cédula...
+              </div>
+            )}
+
+            {voterFirstName && voterLastName && !loading && (
+              <p className="text-green-600 text-center">
+                Bienvenido, {voterFirstName} {voterLastName}!
+              </p>
+            )}
+
             <Button
               variant="primary"
               onClick={handleLogin}
               fullWidth
-              icon={<Shield className="w-5 h-5" />}
+              icon={loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shield className="w-5 h-5" />}
+              disabled={loading} // Disable button when loading
             >
-              Autenticar con FirmaEc
+              {loading ? 'Validando...' : 'Autenticar con FirmaEc'}
             </Button>
 
             <TrustBlock message="Su identidad será verificada mediante firma electrónica FirmaEc. Este proceso es seguro y cumple con la normativa ecuatoriana." />
@@ -271,6 +315,12 @@ export default function App() {
                     <span className="text-gray-600">Número de Cédula:</span>
                     <span className="text-gray-900">{cedula}</span>
                   </div>
+                  {voterFirstName && voterLastName && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Nombre Completo:</span>
+                      <span className="text-gray-900">{voterFirstName} {voterLastName}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Fecha y Hora:</span>
                     <span className="text-gray-900">{currentDate}</span>

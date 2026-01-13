@@ -5,13 +5,27 @@ networks:
     driver: bridge
 
 services:
-  # --- Backend Microservices ---
+  # --- Reverse Proxy (Main Entry Point) ---
+  reverse-proxy:
+    image: nginx:stable-alpine
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./reverse-proxy/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - votaya-net
+    depends_on:
+      - frontend
+      - auth-service
+      - voting-service
+      - report-service
 
+  # --- Backend Microservices ---
   auth-service:
     build: ./VotaYa-Backend/AuthService
     container_name: auth-service
-    ports:
-      - "8081:8081"
+    # No ports exposed directly, access is through reverse-proxy
     networks:
       - votaya-net
     environment:
@@ -20,8 +34,7 @@ services:
   voting-service:
     build: ./VotaYa-Backend/VotingService
     container_name: voting-service
-    ports:
-      - "8082:8082"
+    # No ports exposed directly, access is through reverse-proxy
     networks:
       - votaya-net
     depends_on:
@@ -33,46 +46,38 @@ services:
   ledger-service:
     build: ./VotaYa-Backend/LedgerService
     container_name: ledger-service
-    ports:
-      - "8083:8083"
+    # No ports exposed directly
     networks:
       - votaya-net
     depends_on:
       - votaya-broker
-    volumes:
-      - sqlite-data:/database
+      - votaya-db
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - RABBITMQ_HOST=votaya-broker
+      - DB_HOST=votaya-db
 
   report-service:
     build: ./VotaYa-Backend/ReportService
     container_name: report-service
-    ports:
-      - "8084:8084"
-    networks:
-      - votaya-net
-    volumes:
-      - sqlite-data:/database
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-
-  # --- Frontend Service ---
-
-  frontend:
-    build: ./VotaYa Digital Voting Platform
-    container_name: frontend
-    ports:
-      - "80:80"
+    # No ports exposed directly, access is through reverse-proxy
     networks:
       - votaya-net
     depends_on:
-      - auth-service
-      - voting-service
-      - report-service
+      - votaya-db
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=votaya-db
+
+  # --- Frontend Service ---
+  frontend:
+    build: ./VotaYa Digital Voting Platform
+    container_name: frontend
+    # No ports exposed directly, access is through reverse-proxy
+    networks:
+      - votaya-net
 
   # --- Infrastructure Services ---
-
   votaya-broker:
     image: rabbitmq:3.13-management-alpine
     container_name: votaya-broker
@@ -84,9 +89,22 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
 
+  votaya-db:
+    image: postgres:16-alpine
+    container_name: votaya-db
+    ports:
+      - "5432:5432"
+    networks:
+      - votaya-net
+    environment:
+      - POSTGRES_DB=votayadb
+      - POSTGRES_USER=votaya
+      - POSTGRES_PASSWORD=votayapass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
 volumes:
-  sqlite-data:
-    driver: local
   rabbitmq-data:
     driver: local
-
+  postgres-data:
+    driver: local

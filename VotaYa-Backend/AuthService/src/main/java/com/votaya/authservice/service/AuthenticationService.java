@@ -1,6 +1,7 @@
 package com.votaya.authservice.service;
 
 import com.votaya.authservice.dto.LoginRequest;
+import com.votaya.authservice.dto.CedulaValidationResponse; // Import the new DTO
 import com.votaya.authservice.security.JwtTokenProvider;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,5 +39,30 @@ public class AuthenticationService {
 
         // 4. Generate and return the JWT token.
         return jwtTokenProvider.generateToken(userDetails);
+    }
+
+    /**
+     * Simulates the call to an external API (like ApiConsult del Ecuador) to validate a cedula
+     * and retrieve the associated name and surname.
+     *
+     * @param cedula The cedula number to validate.
+     * @return A CedulaValidationResponse containing the name and surname if found, or an error message.
+     */
+    public CedulaValidationResponse validateCedula(String cedula) {
+        // Simulate API call delay
+        try {
+            Thread.sleep(500); // 0.5 second delay
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Hardcoded responses for demonstration purposes
+        if ("1234567890".equals(cedula)) {
+            return new CedulaValidationResponse("Juan", "Perez");
+        } else if ("0987654321".equals(cedula)) {
+            return new CedulaValidationResponse("Maria", "Garcia");
+        } else {
+            return new CedulaValidationResponse("Cédula no encontrada o inválida.");
+        }
     }
 }
