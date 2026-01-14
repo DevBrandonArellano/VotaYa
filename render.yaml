@@ -7,7 +7,7 @@ services:
   - type: web
     name: frontend
     env: docker
-    dockerfilePath: ./VotaYa Digital Voting Platform/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: ./VotaYa Digital Voting Platform
     repo: https://github.com/tu_usuario/tu_repositorio.git # IMPORTANT: Change this to your repository URL
     branch: main # IMPORTANT: Change this to your branch
@@ -34,7 +34,7 @@ services:
   - type: pserv
     name: auth-service
     env: docker
-    dockerfilePath: ./VotaYa-Backend/AuthService/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: ./VotaYa-Backend/AuthService
     repo: https://github.com/tu_usuario/tu_repositorio.git # IMPORTANT: Change this to your repository URL
     branch: main # IMPORTANT: Change this to your branch
@@ -47,7 +47,7 @@ services:
   - type: pserv
     name: voting-service
     env: docker
-    dockerfilePath: ./VotaYa-Backend/VotingService/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: ./VotaYa-Backend/VotingService
     repo: https://github.com/tu_usuario/tu_repositorio.git # IMPORTANT: Change this to your repository URL
     branch: main # IMPORTANT: Change this to your branch
@@ -65,7 +65,7 @@ services:
   - type: pserv
     name: ledger-service
     env: docker
-    dockerfilePath: ./VotaYa-Backend/LedgerService/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: ./VotaYa-Backend/LedgerService
     repo: https://github.com/tu_usuario/tu_repositorio.git # IMPORTANT: Change this to your repository URL
     branch: main # IMPORTANT: Change this to your branch
@@ -90,7 +90,7 @@ services:
   - type: pserv
     name: report-service
     env: docker
-    dockerfilePath: ./VotaYa-Backend/ReportService/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: ./VotaYa-Backend/ReportService
     repo: https://github.com/tu_usuario/tu_repositorio.git # IMPORTANT: Change this to your repository URL
     branch: main # IMPORTANT: Change this to your branch
@@ -118,7 +118,7 @@ services:
       - 5672 # AMQP port
       - 15672 # Management UI port
     # Note: For production, you might want a managed RabbitMQ service
-    # if Render offers one, or use a third-party provider.
+    # if Render offers one, or or use a third-party provider.
     # This deploys RabbitMQ as a container, which is less ideal for stateful services.
 
   - type: db # PostgreSQL as a managed database
