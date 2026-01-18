@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # 1. AUTH SERVICE: Conexión forzada a 0.0.0.0 para que Nginx pueda entrar
+  auth-service:
+    build: 
+      context: ./backend/AuthService
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - SERVER_ADDRESS=0.0.0.0
+      # Datos de Azure
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://votaya-server-db.postgres.database.azure.com:5432/votayadb?sslmode=require
+      - SPRING_DATASOURCE_USERNAME=votaya_admin
+      - SPRING_DATASOURCE_PASSWORD=Chispo11
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      # Desactivar seguridad por completo
+      - SPRING_AUTOCONFIGURE_EXCLUDE=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    networks:
+      - votaya-net
+    depends_on:
+      - rabbitmq
+
+  # 2. FRONTEND: Asegúrate de que la ruta ./frontend sea correcta
+  frontend-app:
+    build:
+      context: ./frontend
+    container_name: frontend-app
+    networks:
+      - votaya-net
+
+  # 3. NGINX: El puente que une todo
+  nginx:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+    volumes:
+      # Recuerda que el archivo debe estar en VotaYa/reverse-proxy/nginx.conf
+      - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - votaya-net
+    depends_on:
+      - auth-service
+      - frontend-app
+
+  # 4. RABBITMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - votaya-net
+
+networks:
+  votaya-net:
+    driver: bridge
+
+    
