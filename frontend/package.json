@@ -1,6 +1,6 @@
 
   {
-      "name": "VotaYa Digital Voting Platform",
+      "name": "votaya-frontend",
       "version": "0.1.0",
       "private": true,
       "dependencies": {
